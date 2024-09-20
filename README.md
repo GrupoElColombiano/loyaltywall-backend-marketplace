@@ -1,20 +1,124 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# marketplace_backend
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+This project was generated with [`@vendure/create`](https://github.com/vendure-ecommerce/vendure/tree/master/packages/create).
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+Useful links:
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+- [Vendure docs](https://www.vendure.io/docs)
+- [Vendure Discord community](https://www.vendure.io/community)
+- [Vendure on GitHub](https://github.com/vendure-ecommerce/vendure)
+- [Vendure plugin template](https://github.com/vendure-ecommerce/plugin-template)
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+## Directory structure
+
+* `/src` contains the source code of your Vendure server. All your custom code and plugins should reside here.
+* `/static` contains static (non-code) files such as assets (e.g. uploaded images) and email templates.
+
+## Development
+
+```
+npm run dev
+```
+
+will start the Vendure server and [worker](https://www.vendure.io/docs/developer-guide/vendure-worker/) processes from
+the `src` directory.
+
+## Build
+
+```
+npm run build
+```
+
+will compile the TypeScript sources into the `/dist` directory.
+
+## Production
+
+For production, there are many possibilities which depend on your operational requirements as well as your production
+hosting environment.
+
+### Running directly
+
+You can run the built files directly with the `start` script:
+
+```
+npm run start
+```
+
+You could also consider using a process manager like [pm2](https://pm2.keymetrics.io/) to run and manage
+the server & worker processes.
+
+### Using Docker
+
+We've included a sample [Dockerfile](./Dockerfile) which you can build with the following command:
+
+```
+docker build -t vendure .
+```
+
+This builds an image and tags it with the name "vendure". We can then run it with:
+
+```
+# Run the server
+docker run -dp 3000:3000 -e "DB_HOST=host.docker.internal" --name vendure-server vendure npm run start:server
+
+# Run the worker
+docker run -dp 3000:3000 -e "DB_HOST=host.docker.internal" --name vendure-worker vendure npm run start:worker
+```
+
+Here is a breakdown of the command used above:
+
+- `docker run` - run the image we created with `docker build`
+- `-dp 3000:3000` - the `-d` flag means to run in "detached" mode, so it runs in the background and does not take
+control of your terminal. `-p 3000:3000` means to expose port 3000 of the container (which is what Vendure listens
+on by default) as port 3000 on your host machine.
+- `-e "DB_HOST=host.docker.internal"` - the `-e` option allows you to define environment variables. In this case we
+are setting the `DB_HOST` to point to a special DNS name that is created by Docker desktop which points to the IP of
+the host machine. Note that `host.docker.internal` only exists in a Docker Desktop environment and thus should only be
+used in development.
+- `--name vendure-server` - we give the container a human-readable name.
+- `vendure` - we are referencing the tag we set up during the build.
+- `npm run start:server` - this last part is the actual command that should be run inside the container.
+
+### Docker compose
+
+We've included a sample [docker-compose.yml](./docker-compose.yml) file which demonstrates how the server, worker, and
+database may be orchestrated with Docker Compose.
+
+## Plugins
+
+In Vendure, your custom functionality will live in [plugins](https://www.vendure.io/docs/plugins/).
+These should be located in the `./src/plugins` directory.
+
+## Migrations
+
+[Migrations](https://www.vendure.io/docs/developer-guide/migrations/) allow safe updates to the database schema. Migrations
+will be required whenever you make changes to the `customFields` config or define new entities in a plugin.
+
+The following npm scripts can be used to generate migrations:
+
+```
+npm run migration:generate [name]
+```
+
+The generated migration file will be found in the `./src/migrations/` directory, and should be committed to source control.
+Next time you start the server, and outstanding migrations found in that directory will be run by the `runMigrations()`
+function in the [index.ts file](./src/index.ts).
+
+If, during initial development, you do not wish to manually generate a migration on each change to customFields etc, you
+can set `dbConnectionOptions.synchronize` to `true`. This will cause the database schema to get automatically updated
+on each start, removing the need for migration files. Note that this is **not** recommended once you have production
+data that you cannot lose.
+
+---
+
+You can also run any pending migrations manually, without starting the server by running:
+
+```
+npm run migration:run
+```
+
+You can revert the most recently-applied migration with:
+
+```
+npm run migration:revert
+```
