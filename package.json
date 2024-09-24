@@ -10,7 +10,7 @@
     "build": "tsc",
     "start:server": "node ./dist/index.js",
     "start:worker": "node index-worker.js",
-    "start": "concurrently yarn:start:*",
+    "start": "concurrently npm:start:*",
     "migration:generate": "ts-node migration generate",
     "migration:run": "ts-node migration run",
     "migration:revert": "ts-node migration revert"
