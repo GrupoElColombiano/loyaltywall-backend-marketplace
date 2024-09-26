@@ -11,7 +11,7 @@ export class HealthCheckPlugin implements NestModule {
         consumer
             .apply((req: Request, res: Response, next: NextFunction) => {
                 if (req.path === '/') {
-                    res.status(200).send('Healthy');
+                    res.status(200).send('Backend marketplace V 1.0.1');
                 } else {
                     next();
                 }

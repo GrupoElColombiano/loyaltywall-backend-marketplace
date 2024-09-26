@@ -59,10 +59,10 @@ export class ProductsController {
         }
 
         const dbResponse = await this.productVariantService.getVariantsByCollectionId(ctx, collectionId, options, ['featuredAsset', 'product', 'productVariantPrices', 'product.featuredAsset','stockLevels'])
-        console.log("🚀 ~ ProductsController ~ findAll ~ dbResponse:", dbResponse)
+        console.log("🚀 ~ ProductsController ~ findAll - 62 ~ dbResponse:", dbResponse)
 
         const dbResponseTest = await this.productVariantService.getVariantsByCollectionId(ctx, collectionId, options)
-        console.log("🚀 ~ ProductsController ~ findAll ~ dbResponseTest:", dbResponseTest)
+        console.log("🚀 ~ ProductsController ~ findAll - 65 ~ dbResponseTest:", dbResponseTest)
 
         // get the point value from the gamification service
         const siteId = 1 // siteId -> the id of the site
@@ -73,17 +73,17 @@ export class ProductsController {
 
         const url = `${process.env.BACKEND_GAMIFICATION_URL}/gamification/point_value/filter-pagination/${siteId}/${userId}/${page}/${limit}/${type}`
 
-        console.log('Por acá ingresó al consultar productos', ctx.req?.query, url);
+        console.log('Por acá ingresó al consultar productos - 76', ctx.req?.query, url);
         // const pointsValueRequest = await axios.get(url)
         const pointsValueRequest = await fetch(url, { 
             method: "GET", 
             headers: { 'Content-Type': 'application/json' },
             }
         ).then((response) => response.json() );
-        console.log("🚀 ~ ProductsController ~ findAll ~ pointsValueRequest:", pointsValueRequest)
+        console.log("🚀 ~ ProductsController ~ findAll - 83 ~ pointsValueRequest:", pointsValueRequest)
 
         const pointValue: number = pointsValueRequest?.data?.point_value
-        console.log("🚀 ~ ProductsController ~ findAll ~ pointValue:", pointValue)
+        console.log("🚀 ~ ProductsController ~ findAll - 86 ~ pointValue:", pointValue)
 
 
         if (!userId || Array.isArray(userId)){
@@ -91,13 +91,13 @@ export class ProductsController {
         }
 
         const favorites = await this.favoritesService.findAll({ctx, options: { userId }});
-        console.log("🚀 ~ ProductsController ~ findAll ~ favorites:", favorites)
+        console.log("🚀 ~ ProductsController ~ findAll - 94 ~ favorites:", favorites)
 
         const favoritesProductVariantsIds = favorites.map(favorite => Number(favorite.productVariant.id));
-        console.log("🚀 ~ ProductsController ~ findAll ~ favoritesProductVariantsIds:", favoritesProductVariantsIds)
+        console.log("🚀 ~ ProductsController ~ findAll - 97 ~ favoritesProductVariantsIds:", favoritesProductVariantsIds)
 
         const items = productsToResponse(dbResponse.items, pointValue, favoritesProductVariantsIds);
-        console.log("🚀 ~ ProductsController ~ findAll ~ items:", JSON.stringify(items))
+        console.log("🚀 ~ ProductsController ~ findAll - 100 ~ items:", JSON.stringify(items))
 
         return { items, totalItems: dbResponse.totalItems };
     }
@@ -218,6 +218,68 @@ export class ProductsController {
         }
         
     }
+
+    // @Get(':id')
+    // async findOne(@Ctx() ctx: RequestContext) {
+    //     console.log(" ✅✅✅✅✅✅✅ id ✅✅✅✅✅✅")
+    //     const id = ctx.req?.params.id // id of the product
+    //     const queryParam: any = ctx.req?.query 
+
+    //     if (!id) {
+    //         // throw new Error('No id provided');
+    //         console.log('167 - No id provided');
+    //         return { item: null };
+    //     }
+
+    //     const product = await this.productVariantService.findOne(ctx, id, ['featuredAsset','stockLevels','product', 'product.featuredAsset', 'productVariantPrices'])
+    //     console.log("🚀 ~ ProductsController ~ findOne - 172 - ~ product:", product)
+
+        
+
+    //     //todo:make the point request here...
+    //     // const responseDB = await this.pointsService.findOne({ctx, options: { id: '76' }});
+    //     // console.log("🚀 ~ ProductsController ~ findOne ~ responseDB:", responseDB)
+    //     console.log('SEEING THE ID:: 👌👌', id);
+
+    //     if (!product) {
+    //         // throw new Error('No product found');
+    //         console.log('182 - No product found');
+    //         return { item: null };
+    //     }
+        
+    //     // get the point value from the gamification service
+    //     // get the point value from the gamification service
+    //     const siteId = 1 // siteId -> the id of the site
+    //     const userId = ctx.req?.headers?.user_id as string || 'b26ab80f-ce92-4ef2-8d8c-a098d8bf69b1';
+    //     const page = queryParam.page || 1
+    //     const limit = queryParam.limit || 1
+    //     const type = queryParam.type || 0
+
+    //     const favorites = await this.favoritesService.findAll({ctx, options: { userId }});
+    //     console.log("🚀 ~ ProductsController ~ findOne ~ favorites:", favorites)
+
+    //     const url = `${process.env.BACKEND_GAMIFICATION_URL}/gamification/point_value/filter-pagination/${siteId}/${userId}/${page}/${limit}/${type}`
+
+    //     const pointsValueRequest = await axios.get(url)
+
+    //     const pointValue: number = pointsValueRequest.data.point_value
+
+    //     console.log('SEEING THE POINTS 🧠🧠', pointValue);
+
+    //     if (!userId || Array.isArray(userId)){
+    //         // throw new BadRequestException('El usuario no está autenticado');
+    //         console.log('El usuario no está autenticado');
+    //         return {item: null};
+    //     }
+
+        
+
+    //     const favoritesProductVariantsIds = favorites.map(favorite => Number(favorite.productVariant.id));
+    //     console.log("💊 - 214", { product, pointValue, favoritesProductVariantsIds });
+    //     const [response] = productsToResponse([product], pointValue, favoritesProductVariantsIds);
+    //     console.log("🚀 ~ ProductsController ~ findOne - 210* - ~ response:", response)
+    //     return {item: response};
+    // }
 
     @Post(':productVariantId/favorite')
     async createFavorite(@Ctx() ctx: RequestContext) {
