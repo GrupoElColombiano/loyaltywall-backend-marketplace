@@ -111,10 +111,6 @@ export const config: VendureConfig = {
         AdminUiPlugin.init({
             route: 'admin',
             port: 443,
-            // // port: 80,
-            // adminUiConfig: {
-            //     apiPort: 443,
-            // },
         }),
         HealthCheckPlugin,
     ],
