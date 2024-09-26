@@ -20,7 +20,7 @@ export class ProductsController {
 
     @Get()
     async findAll(@Ctx() ctx: RequestContext) {
-        console.log(" ✅✅✅✅✅✅✅ find all ✅✅✅✅✅✅")
+      
         const queryParam: any = ctx.req?.query // queryParam -> the query parameters
 
         const { collectionId,  maxPrice, minPrice, sortBy } = queryParam  // skip -> the number of products to skip, take -> the number of products to take
@@ -104,7 +104,7 @@ export class ProductsController {
 
     @Get('max-price')
     async getMaxPrice(@Ctx() ctx: RequestContext) {
-        console.log(" ✅✅✅✅✅✅✅ max price ✅✅✅✅✅✅")
+   
         const queryParam: any = ctx.req?.query 
 
         const { collectionId } = queryParam 
@@ -118,18 +118,24 @@ export class ProductsController {
 
     @Get('favorites')
     async getFavorites(@Ctx() ctx: RequestContext) {
-        console.log(" ✅✅✅✅✅✅✅ favorites ✅✅✅✅✅✅")
+
+        const queryParam: any = ctx.req?.query
+        
         const userId = ctx.req?.headers?.user_id;
+        const page = queryParam.page || 1
+        const limit = queryParam.limit || 1
+        const type = queryParam.type || 0
+
 
         if (!userId || Array.isArray(userId)){
             throw new BadRequestException('El usuario no está autenticado');
         }
 
         const favorites = await this.favoritesService.findAll({ctx, options: { userId }});
-
+    
         const siteId = 1 // siteId -> the id of the site
 
-        const url = `${process.env.BACKEND_GAMIFICATION_URL}/gamification/point_value/${siteId}`
+        const url = `${process.env.BACKEND_GAMIFICATION_URL}/gamification/point_value/filter-pagination/${siteId}/${userId}/${page}/${limit}/${type}`
 
         const pointsValueRequest = await axios.get(url)
 
@@ -142,7 +148,7 @@ export class ProductsController {
 
     @Get('points')
     async getPoints(@Ctx() ctx: RequestContext) {
-        console.log(" ✅✅✅✅✅✅✅ points ✅✅✅✅✅✅")
+    
         const dbResponse = await this.collectionService.findOneBySlug(ctx, 'puntos', ['productVariants', 'productVariants.product', 'productVariants.product.featuredAsset', 'productVariants.productVariantPrices', 'productVariants.featuredAsset', 'productVariants.stockLevels'])
 
         if (!dbResponse) {
@@ -156,7 +162,6 @@ export class ProductsController {
 
     @Get(':id')
     async findOne(@Ctx() ctx: RequestContext) {
-        console.log(" ✅✅✅✅✅✅✅ id ✅✅✅✅✅✅")
         const id = ctx.req?.params.id // id of the product
         const queryParam: any = ctx.req?.query 
 
@@ -166,12 +171,6 @@ export class ProductsController {
 
         const product = await this.productVariantService.findOne(ctx, id, ['featuredAsset','stockLevels','product', 'product.featuredAsset', 'productVariantPrices'])
 
-        
-
-        //todo:make the point request here...
-        // const responseDB = await this.pointsService.findOne({ctx, options: { id: '76' }});
-        // console.log("🚀 ~ ProductsController ~ findOne ~ responseDB:", responseDB)
-        console.log('SEEING THE ID:: 👌👌', id);
 
         if (!product) {
             throw new Error('No product found');
@@ -186,32 +185,43 @@ export class ProductsController {
         const type = queryParam.type || 0
 
         const favorites = await this.favoritesService.findAll({ctx, options: { userId }});
-        console.log("🚀 ~ ProductsController ~ findOne ~ favorites:", favorites)
+      
 
         const url = `${process.env.BACKEND_GAMIFICATION_URL}/gamification/point_value/filter-pagination/${siteId}/${userId}/${page}/${limit}/${type}`
+       
+        try {
+
+        let pointValue = 0
 
         const pointsValueRequest = await axios.get(url)
 
-        const pointValue: number = pointsValueRequest.data.point_value
+        if (pointsValueRequest.status === 404) {
+            pointValue = 0
+        } else {
+            pointValue = pointsValueRequest?.data[0]?.points
+        }
 
-        console.log('SEEING THE POINTS 🧠🧠', pointValue);
 
         if (!userId || Array.isArray(userId)){
             throw new BadRequestException('El usuario no está autenticado');
         }
 
         
-
         const favoritesProductVariantsIds = favorites.map(favorite => Number(favorite.productVariant.id));
 
         const [response] = productsToResponse([product], pointValue, favoritesProductVariantsIds);
 
         return {item: response};
+
+        } catch(error:any) {
+            console.log("🔴🔴🔴🔴", error);
+        }
+        
     }
 
     @Post(':productVariantId/favorite')
     async createFavorite(@Ctx() ctx: RequestContext) {
-        console.log(" ✅✅✅✅✅✅✅ product variant - favorite ✅✅✅✅✅✅")
+      
         const productVariantId = ctx.req?.params.productVariantId // id of the product
 
         if (!productVariantId) {
@@ -231,7 +241,7 @@ export class ProductsController {
 
     @Delete(':productVariantId/favorite')
     async deleteFavorite(@Ctx() ctx: RequestContext) {
-        console.log(" ✅✅✅✅✅✅✅ delete - favorite ✅✅✅✅✅✅")
+     
         const productVariantId = ctx.req?.params.productVariantId // productVariantId of the product
 
         if (!productVariantId) {
