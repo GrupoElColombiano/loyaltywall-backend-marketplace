@@ -3,6 +3,6 @@ dist
 admin-ui
 static/assets
 static/email/test-emails
-
+.DS_Store
 # .env
 .env
