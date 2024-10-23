@@ -26,6 +26,20 @@ export class ShoppingCarController {
             throw new BadRequestException('El usuario no está autenticado');
         }
 
+        //TODO get the site if from the params
+
+        const url = `${process.env.BACKEND_ADMIN_GAMIFICATION_URL}/gamification/point_value/1`
+
+     // get the point value from the gamification service
+        const pointsValueRequest = await fetch(url, { 
+            method: "GET", 
+            headers: { 'Content-Type': 'application/json' },
+            }
+        ).then((response) => response.json() );
+        
+
+        const pointValue: number = pointsValueRequest?.point_value ||  0
+
         const shoppingCar = await this.shoppingCarService.findOne({
             ctx,
             options: {
@@ -50,10 +64,35 @@ export class ShoppingCarController {
                 }
             });
 
-            return shoppingCar;
+            const productToReturn = shoppingCar!.products.map((product) => {
+                return {
+                   ...product,
+                   points: Math.floor(product.price / pointValue)
+                }
+            })
+
+            const productResponse = {
+                ...shoppingCar,
+                products: productToReturn ?? []
+            }
+
+            return productResponse
         }
 
-        return shoppingCar;
+
+        const productToReturn = shoppingCar!.products.map((product) => {
+            return {
+               ...product,
+               points: Math.floor(product.price / pointValue) 
+            }
+        })
+
+        const productResponse = {
+            ...shoppingCar,
+            products: productToReturn ?? []
+        }
+
+        return productResponse
     }
 
     @Get('total-products')
@@ -99,6 +138,8 @@ export class ShoppingCarController {
     @Post('buy')
     async buyWithPoints(@Ctx() ctx: RequestContext) {
         const userId = ctx.req?.headers?.user_id;
+        const token = ctx.req?.headers?.authorization?.split(' ')[1];
+
 
         if (!userId || Array.isArray(userId)){
             throw new BadRequestException('El usuario no está autenticado');
@@ -143,15 +184,23 @@ export class ShoppingCarController {
             userId: userId,
             status: true,
             order_id: orderId,
+            data:body.data
         }
 
-        const res = await axios.post(url, data)
+        const res = await axios.post(url, data, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        })
 
         if (res.status !== 201) {
             throw new InternalServerError('Error al realizar el pago');
         }
 
-        return true;
+        return {
+            info: res.data,
+            status:true
+        };
     }
 
     @Put('add-product')

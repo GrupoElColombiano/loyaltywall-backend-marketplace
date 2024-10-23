@@ -125,11 +125,17 @@ export class ProductsController {
     
         const siteId = 1 // siteId -> the id of the site
 
-        const url = `${process.env.BACKEND_GAMIFICATION_URL}/gamification/point_value/filter-pagination/${siteId}/${userId}/${page}/${limit}/${type}`
+        const url = `${process.env.BACKEND_ADMIN_GAMIFICATION_URL}/gamification/point_value/${siteId}`
 
-        const pointsValueRequest = await axios.get(url)
+     // get the point value from the gamification service
+        const pointsValueRequest = await fetch(url, { 
+            method: "GET", 
+            headers: { 'Content-Type': 'application/json' },
+            }
+        ).then((response) => response.json() );
+        
 
-        const pointValue: number = pointsValueRequest.data.point_value
+        const pointValue: number = pointsValueRequest?.point_value ||  0
 
         const items = favoritesToResponse(favorites, pointValue);
 
