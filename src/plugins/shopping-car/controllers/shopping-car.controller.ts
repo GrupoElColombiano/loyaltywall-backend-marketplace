@@ -176,29 +176,34 @@ export class ShoppingCarController {
             throw new InternalServerError('Error al desactivar el carrito de compras');
         }
 
-        const url = `${process.env.BACKEND_GAMIFICATION_URL}/payment/create`
+        const url = `${process.env.BACKEND_GAMIFICATION_URL}/payment/create`;
 
-        const data = {
-            gateway_id: 1,
-            amount: body.pointsAmount,
-            userId: userId,
-            status: true,
-            order_id: orderId,
-            data:body.data
-        }
+            const data = {
+                gateway_id: 1,
+                amount: body.pointsAmount,
+                userId: userId,
+                status: true,
+                order_id: orderId,
+                data: body.data
+            };
 
-        const res = await axios.post(url, data, {
-            headers: {
-                Authorization: `Bearer ${token}`,
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (res.status !== 201) {
+                throw new InternalServerError('Error al realizar el pago');
             }
-        })
 
-        if (res.status !== 201) {
-            throw new InternalServerError('Error al realizar el pago');
-        }
+            const result = await res.json();
 
         return {
-            info: res.data,
+            info: result,
             status:true
         };
     }
